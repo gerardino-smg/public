@@ -5,14 +5,42 @@
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
   <title>Go to ticket</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
 </head>
+<style>
+  .go-to-form {
+    display: flex;
+    justify-content: center;
+  }
+  .go-to-form input {
+    font-size: x-large;
+    padding: 0.25em;
+    margin: 0.15em;
+  }
+  .main-input {
+    width: 80%;
+  }
+  .error {
+    border-color: red;
+  }
+  .highlighted {
+    background-color: blue;
+  }
+  .highlighted a {
+    color: white;
+  }
+  .history-item {
+    font-family: 'Courier New', Courier, monospace;
+    padding: 5px;
+    list-style-type: decimal-leading-zero;
+  }
+</style>
 <body>
-  <h1>Get Ticket 🎟️</h1>
-
+  <h1 class="header">Go To Ticket 🎟️</h1>
   <div>
-    <h2>Go to ticket</h2>
-    👉<button id="ticketButton">Take me to a ticket!</button>👈
+    <form class="go-to-form" id="goToForm">
+      <input type="text" value="DD-" id="ticketNumber" class="main-input">
+      <input type="submit" value="GO">
+    </form>
   </div>
 
   <div>
@@ -26,13 +54,14 @@
     return `https://smg-re.atlassian.net/browse/${ticket}`
   }
 
-  function goToTicket() {
-    const ticket = prompt("Which ticket?", "DD-");
-
-    if (ticket) {
-      saveTicket(ticket);
-      window.location = generateUrl(ticket);
+  function submitTicket(event) {
+    if (ticketInput.value && ticketInput.value.length > 3) {
+      saveTicket(ticketInput.value);
+      window.location = generateUrl(ticketInput.value);
+    } else {
+      ticketInput.classList.add('error');
     }
+    event.preventDefault();
   }
 
   const ticketKey = 'recent-tickets';
@@ -42,17 +71,18 @@
     try {
       tickets = JSON.parse(localStorage.getItem(ticketKey)) || tickets;
     } catch (error) {
-      
     }
 
     return tickets;
   }
 
   function saveTicket(ticket) {
-    if (!tickets.includes(ticket)) {
-      tickets.unshift(ticket);
-      localStorage.setItem(ticketKey, JSON.stringify(tickets));
+    if (tickets.includes(ticket)) {
+      const index = tickets.indexOf(ticket)
+      tickets = tickets.splice(0, index).concat(tickets.splice(index+1));
     }
+    tickets.unshift(ticket);
+    localStorage.setItem(ticketKey, JSON.stringify(tickets));
   }
 
   function renderTickets(tickets) {
@@ -60,6 +90,7 @@
 
     tickets.forEach(t => {
       const li = document.createElement('li');
+      li.setAttribute('class', 'history-item');
       const a = document.createElement('a');
       a.appendChild(document.createTextNode(t));
       a.setAttribute('href', generateUrl(t));
@@ -69,12 +100,48 @@
     });
   }
 
-  const tickets = loadTickets();
+  function goToIndex(index) {
+    if (tickets[index] !== undefined) {
+      const items = document.getElementsByClassName('history-item');
+      for(let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+        const item = items[itemIndex];
+        if (item.classList.contains('highlighted')) {
+          item.classList.remove('highlighted');
+        }
+        if (index === itemIndex) {
+          item.classList.add('highlighted');
+        }
+      }
+
+      ticketInput.value = tickets[index];
+      ticketInput.setSelectionRange(3, ticketInput.value.length);
+    }
+  }
+
+  function keyPressHandler(event) {
+    if (event.key === 'ArrowDown') {
+      if (ticketIndex + 1 < tickets.length)
+      ticketIndex++;
+      goToIndex(ticketIndex);
+    } else if (event.key === 'ArrowUp') {
+      if (ticketIndex > 0)
+      ticketIndex--;
+      goToIndex(ticketIndex);
+    }
+  }
+
+  let tickets = loadTickets();
   renderTickets(tickets);
 
-  const ticketButton = document.querySelector("#ticketButton");
-  ticketButton.addEventListener("click", goToTicket);
+  const goToForm = document.querySelector("#goToForm");
+  goToForm.addEventListener("submit", submitTicket);
+  
+  let ticketIndex = 0;
+  const ticketInput = document.querySelector("#ticketNumber");
+  ticketInput.focus();
+  goToIndex(ticketIndex);
 
-  goToTicket();
+
+  ticketInput.addEventListener("keydown", keyPressHandler);
 </script>
 </html>
