@@ -79,7 +79,7 @@
   function saveTicket(ticket) {
     if (tickets.includes(ticket)) {
       const index = tickets.indexOf(ticket)
-      tickets = tickets.splice(0, index).concat(tickets.splice(index+1));
+      tickets = tickets.splice(0, index).concat(tickets.splice(index));
     }
     tickets.unshift(ticket);
     localStorage.setItem(ticketKey, JSON.stringify(tickets));
