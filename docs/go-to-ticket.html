@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Go to ticket</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+</head>
+<body>
+  <h1>Get Ticket 🎟️</h1>
+
+  <div>
+    <h2>Go to ticket</h2>
+    👉<button id="ticketButton">Take me to a ticket!</button>👈
+  </div>
+
+  <div>
+    <h2>Recent tickets</h2>
+    <ul id="recentTickets">
+    </ul>
+  </div>
+</body>
+<script>
+  function generateUrl(ticket) {
+    return `https://smg-re.atlassian.net/browse/${ticket}`
+  }
+
+  function goToTicket() {
+    const ticket = prompt("Which ticket?", "DD-");
+
+    if (ticket) {
+      saveTicket(ticket);
+      window.location = generateUrl(ticket);
+    }
+  }
+
+  const ticketKey = 'recent-tickets';
+  function loadTickets() {
+    let tickets = [];
+
+    try {
+      tickets = JSON.parse(localStorage.getItem(ticketKey)) || tickets;
+    } catch (error) {
+      
+    }
+
+    return tickets;
+  }
+
+  function saveTicket(ticket) {
+    if (!tickets.includes(ticket)) {
+      tickets.unshift(ticket);
+      localStorage.setItem(ticketKey, JSON.stringify(tickets));
+    }
+  }
+
+  function renderTickets(tickets) {
+    const recentTickets = document.querySelector("#recentTickets");
+
+    tickets.forEach(t => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.appendChild(document.createTextNode(t));
+      a.setAttribute('href', generateUrl(t));
+      li.appendChild(a);
+
+      recentTickets.append(li);
+    });
+  }
+
+  const tickets = loadTickets();
+  renderTickets(tickets);
+
+  const ticketButton = document.querySelector("#ticketButton");
+  ticketButton.addEventListener("click", goToTicket);
+
+  goToTicket();
+</script>
+</html>
